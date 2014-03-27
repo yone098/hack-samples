@@ -1,26 +1,40 @@
-<?hh
+<?hh // strict
 
-// 引数と戻り値は bool
-function garsue(bool $x): bool {
-  return !$x;
+//////////////////////////////////
+// Type Annotations 
+class AnnotatedClass {
+  public int $i = 10;
+  private string $str = "STRING";
+  protected array $arr = array(1, 2);
+  private AnnotatedClass $ac;
+
+  function bar(mixed $mx): (function(mixed): long) {
+    return function($str) use ($mx) {
+      if ($str instanceof string) {
+        return strlen($str);
+      }
+      return 0;
+    };
+  }
+} 
+
+
+function test_type_annotated(bool $flg): int {
+  return 100;
 }
 
-$ret = garsue(true);
-var_dump($ret);
-
-// 型が異なるためにエラー
-//$str = "hoge";
-//garsue($str);
-
-
-
-///////////////////////////////////////////////////////
-// Type Annotations
-function test_type_annotation(): void {
-  
+function test_annotated_class(): void {
+  $ac = new AnnotatedClass();
+  var_dump($ac->bar("hoge"));
+  var_dump($ac);
+  // bool 型の引数に string を指定
+  //test_type_annotated("hello!");
 }
 
-///////////////////////////////////////////////////////
+test_annotated_class();
+
+echo "=== Nullable ===\n";
+//////////////////////////////////
 // ## Nullable Types
 // ? 付きでNullable
 interface mohikan {
@@ -60,8 +74,101 @@ function test_nullable_type(): void {
 
 test_nullable_type();
 
+//////////////////////////////////
+// Generics
+echo "=== Generics ===\n";
+// generic class
+class Animal<T> {
+  private ?T $name;
 
-///////////////////////////////////////////////////////
+  public function set_name(?T $name): void {
+    $this->name = $name;
+  }
+
+  public function get_name(): T {
+    return $this->name;
+  }
+
+  public function get_age(): int {
+    return 1;
+  }
+}
+
+// generic method
+function generic_method<T>(Animal<T> $cat): T {
+  $value = $cat->get_name();
+  
+  return $value;
+}
+
+// Constaraints
+class Wanko {
+  public function get_age(): int {
+    return 1;
+  }
+}
+
+class Dog extends Wanko {
+  public function get_age(): int {
+    return 2;
+  }
+
+  public function is_dog(): bool {
+    return true;
+  }
+}
+
+class Poodle<T> {
+  private T $data;
+
+  public function __construct(T $d) {
+    $this->data = $d;
+  }
+
+  public function get(): T {
+    return $this->data;
+  }
+}
+
+class TeacupPoodle<T as Wanko> extends Poodle<T> {
+  private int $sum = 0;
+  
+  public function __construct(T $wanko) {
+    parent::__construct($wanko);
+    $this->sum += $wanko->get_age();
+  }
+}
+
+function test_generics(): void {
+  $dog = new Animal();
+  $dog->set_name("Pochi");
+  echo "dog->get_name():" . $dog->get_name() . "\n";
+
+  $cat = new Animal();
+  $cat->set_name("Mike");
+  $cat_name = generic_method($cat);
+  var_dump($cat_name);
+
+  $dog = new Dog();
+  echo "=== dog ===\n";
+  var_dump($dog);
+
+  $teacup_poodle = new TeacupPoodle($dog);
+  echo "=== teacup_poodle ===\n";
+  var_dump($teacup_poodle);
+  
+  $poodle2 = $teacup_poodle->get();
+  echo "=== poodle2 ===\n";
+  var_dump($poodle2);
+  echo "=== poodle2->is_dog() ===\n";
+  var_dump($poodle2->is_dog());
+}
+
+test_generics();
+
+
+//////////////////////////////////
+echo "=== Collections ===\n";
 // Collections
 function test_collections(): void {
   // Vector
@@ -102,55 +209,42 @@ function test_collections(): void {
 
 test_collections();
 
-///////////////////////////////////////////////////////
+
+//////////////////////////////////
+// Type Aliasing
+type user_id = int;
+
+// 引数の型は user_id 
+function get_user_name(user_id $user_id): string {
+  return "mopemope";
+}
+
+newtype password = string;
+// 引数の型は password
+function login(user_id $user_id, password $password): bool {
+  return true;
+}
+
+//////////////////////////////////
+echo "=== Ovreride ===\n";
 // Override
 class Yone {
-  public function yone_098(): string {
-    return "yone_098";
+  public function say_name(): string {
+    return "yone";
   }
 }
 
 class Yone098 {
-  <<Override>> public function yone_123(): string {
-    return "yone_123";
+  <<Override>> public function sya_name(): string {
+    return "yone098";
   }
 }
 
 function test_override(): void {
-  echo "call test_override()\n";
-
   $yone = new Yone098();
   // エラーになる
-  //echo "yone->yone_098() : " . $yone->yone_098() . "\n";
+  //echo "yone->say_name() : " . $yone->say_name() . "\n";
 }
 
 test_override();
-
-
-///////////////////////////////////////////////////////
-// Type Aliasiling
-type mopeInt = int;
-function sum(mopeInt $v): int {}
-
-newtype yone_name = string;
-// 引数は yone_name 型しか受け付けない	
-function foo(yone_name $v): void {}
-
-newtype mopePoint = (long, long);
-function test_point(mopePoint $v): void {}
-// Override
-
-
-///////////////////////////////////////////////////////
-// Typeing XHP
-function test_xhp(string $text, string $style): :div {
-  return
-    <div style={$style}>
-      <p>{$text}</p>
-    </div>;
-}
-
-test_xhp("Garsue!", "color=red");
-
-
 
