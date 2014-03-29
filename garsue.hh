@@ -248,3 +248,21 @@ function test_override(): void {
 
 test_override();
 
+//////////////////////////////////
+echo "=== Variable Number of Arguments ===\n";
+
+// 引数は可変長引数
+function test_many_args(int $num, ...): void {
+  echo "num:" . $num . "\n";
+  foreach (func_get_args() as $e) {
+    var_dump($e);
+  }
+}
+
+
+// Variable Number of Arguments
+function test_valiable_number_of_arg(): void {
+  test_many_args(100, "garsue", 1, array(), new Yone(), 3.14);
+}
+
+test_valiable_number_of_arg();
